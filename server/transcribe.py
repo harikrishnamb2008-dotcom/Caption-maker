@@ -2,25 +2,34 @@ import whisper
 import sys
 import os
 
-print("--- Debugging Start ---")
+def generate_captions(video_path):
+    print(f"DEBUG: Starting function with file: {video_path}")
+    
+    if not os.path.exists(video_path):
+        print(f"DEBUG ERROR: File not found at {os.path.abspath(video_path)}")
+        return
 
-# 1. Print the arguments received
-print(f"Arguments received: {sys.argv}")
+    print("DEBUG: Loading Whisper model...")
+    try:
+        model = whisper.load_model("base")
+        print("DEBUG: Model loaded successfully.")
+    except Exception as e:
+        print(f"DEBUG ERROR: Failed to load model: {e}")
+        return
 
-# 2. Check if the file path is valid
-file_path = sys.argv[1] if len(sys.argv) > 1 else "None"
-print(f"Looking for file at: {os.path.abspath(file_path)}")
-print(f"Does file exist? {os.path.exists(file_path)}")
+    print("DEBUG: Starting transcription...")
+    try:
+        result = model.transcribe(video_path)
+        print("DEBUG: Transcription process finished.")
+        print("\n--- TRANSCRIPTION OUTPUT ---")
+        print(result["text"])
+        print("----------------------------")
+    except Exception as e:
+        print(f"DEBUG ERROR: Transcription failed: {e}")
 
-# 3. Load the model
-print("Loading model...")
-model = whisper.load_model("base")
-print("Model loaded.")
-
-# 4. Transcribe
-print("Attempting to transcribe...")
-result = model.transcribe(file_path)
-print("Transcription finished.")
-
-# 5. Print text
-print("Text found:", result["text"])
+if __name__ == "__main__":
+    print("AI Transcription Service Initialized.")
+    if len(sys.argv) > 1:
+        generate_captions(sys.argv[1])
+    else:
+        print("ERROR: No filename provided.")
