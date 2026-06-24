@@ -1,42 +1,40 @@
+from fastapi import FastAPI, UploadFile, File
 import whisper
-import sys
+import shutil
 import os
 
-# --- IMPORTANT: UPDATE THIS PATH TO WHERE FFMPEG IS ON YOUR PC ---
-FFMPEG_LOCATION = r"C:\ffmpeg\bin\ffmpeg.exe"
-# -----------------------------------------------------------------
+# --- IMPORTANT: Ensure this path matches your actual ffmpeg.exe location ---
+FFMPEG_PATH = r"C:\ffmpeg\bin\ffmpeg.exe"
 
-def generate_captions(video_path):
-    # Verify FFmpeg exists
-    if not os.path.exists(FFMPEG_LOCATION):
-        print(f"ERROR: Could not find ffmpeg.exe at {FFMPEG_LOCATION}")
-        print("Please install FFmpeg and update the FFMPEG_LOCATION path in this script.")
-        return
+# Point the system to the folder containing ffmpeg
+if os.path.exists(FFMPEG_PATH):
+    os.environ["PATH"] += os.pathsep + os.path.dirname(FFMPEG_PATH)
+else:
+    print(f"WARNING: FFmpeg not found at {FFMPEG_PATH}. Transcription might fail.")
 
-    # Point the script to the folder containing ffmpeg
-    os.environ["PATH"] += os.pathsep + os.path.dirname(FFMPEG_LOCATION)
+app = FastAPI()
 
-    print("DEBUG: Loading Whisper model (this may take a minute)...")
+# Load the model once when the server starts so it's ready for requests
+print("DEBUG: Loading Whisper model...")
+model = whisper.load_model("base")
+print("DEBUG: Model loaded and ready.")
+
+@app.post("/transcribe")
+async def transcribe_video(file: UploadFile = File(...)):
+    # Create a temporary file to save the uploaded video
+    temp_filename = f"temp_{file.filename}"
+    
+    with open(temp_filename, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
     try:
-        model = whisper.load_model("base")
-        print("DEBUG: Starting transcription...")
-        
-        # 'verbose=True' prints the progress bars to your terminal
-        result = model.transcribe(video_path, verbose=True)
-        
-        print("\n--- TRANSCRIPTION OUTPUT ---")
-        print(result["text"])
-        print("----------------------------")
-        
-    except Exception as e:
-        print(f"DEBUG ERROR: Transcription failed: {e}")
+        # Run the transcription
+        result = model.transcribe(temp_filename)
+        transcribed_text = result["text"]
+    finally:
+        # Always delete the temporary file, even if an error occurs
+        if os.path.exists(temp_filename):
+            os.remove(temp_filename)
+    
+    return {"text": transcribed_text}
 
-if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        video_file = sys.argv[1]
-        if os.path.exists(video_file):
-            generate_captions(video_file)
-        else:
-            print(f"ERROR: File '{video_file}' not found.")
-    else:
-        print("Usage: python transcribe.py <path_to_video>")
