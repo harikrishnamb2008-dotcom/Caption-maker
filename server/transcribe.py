@@ -28,18 +28,18 @@ def generate_captions(video_path):
         print(f"DEBUG ERROR: Transcription failed: {e}")
 
 if __name__ == "__main__":
-    print("AI Transcription Service Initialized.")
+    print(f"DEBUG: Script started. Arguments received: {sys.argv}")
     
-    # Check if a file path was passed in the terminal
     if len(sys.argv) > 1:
         video_file = sys.argv[1]
-        print(f"Processing: {video_file}...")
+        print(f"DEBUG: Found filename: {video_file}")
         
-        # Call the function
-        segments = generate_captions(video_file)
-        
-        # Print the results
-        for segment in segments:
-            print(f"[{segment['start']:.2f}s - {segment['end']:.2f}s]: {segment['text']}")
+        if os.path.exists(video_file):
+            print("DEBUG: File verified as existing. Starting transcription...")
+            segments = generate_captions(video_file)
+            for segment in segments:
+                print(f"[{segment['start']:.2f}s]: {segment['text']}")
+        else:
+            print(f"DEBUG ERROR: The file '{video_file}' was not found by Python.")
     else:
-        print("Please provide a video file as an argument.")
+        print("DEBUG ERROR: No arguments were passed to the script.")
