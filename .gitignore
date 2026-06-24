@@ -1,1 +1,14 @@
+# Ignore API keys and environment variables
+.env
+.env.local
 
+# Ignore node modules (heavy library files)
+node_modules/
+
+# Ignore video files
+*.mp4
+*.mov
+*.mkv
+
+# Ignore OS files
+.DS_Store
