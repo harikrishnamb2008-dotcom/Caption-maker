@@ -29,7 +29,17 @@ def generate_captions(video_path):
 
 if __name__ == "__main__":
     print("AI Transcription Service Initialized.")
+    
+    # Check if a file path was passed in the terminal
     if len(sys.argv) > 1:
-        generate_captions(sys.argv[1])
+        video_file = sys.argv[1]
+        print(f"Processing: {video_file}...")
+        
+        # Call the function
+        segments = generate_captions(video_file)
+        
+        # Print the results
+        for segment in segments:
+            print(f"[{segment['start']:.2f}s - {segment['end']:.2f}s]: {segment['text']}")
     else:
-        print("ERROR: No filename provided.")
+        print("Please provide a video file as an argument.")
